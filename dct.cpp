@@ -51,6 +51,7 @@ int main(int argc, char** argv)
 	// The quantized coefficients should be stored into 'coeffArray'
 	double coeffArray[256][256]={0};
 	int blockRow = rows / 8, blockCol = cols / 8;
+    
 	for (int i = 0; i < blockRow; i++)
 	{
 		for (int j = 0; j < blockCol; j++)
@@ -88,7 +89,7 @@ int main(int argc, char** argv)
                     {
                         sum += cos((double)((2*y+1)*v*PI)/16.0) * Fr[u][y];
                     }
-                    coeffArray[xpos+u][ypos+v] = 0.5 * cu * sum;
+                    coeffArray[xpos+u][ypos+v] = 0.5 * cv * sum;
                 }
             }
             
@@ -116,7 +117,7 @@ int main(int argc, char** argv)
 		fprintf(fp, "\n");
 	}
 	cout << "Quantized coefficients saved!" << endl;
-    /*
+    
 	if (need_idct)
 	{
 		Bitmap reconstructedImg(cols, rows);
@@ -126,21 +127,75 @@ int main(int argc, char** argv)
 			for (int j = 0; j < blockCol; j++)
 			{
 				int xpos = j*8, ypos = i*8;
+                double Fr_[8][8] = {0};
 				//! apply de-quantization on block_ij 
 				//TODO
+                for (int u = 0; u < 8; u++)
+                {
+                    for (int v = 0; v < 8; v++)
+                    {
+                        coeffArray[xpos+u][ypos+v] = (double)coeffArray[xpos+u][ypos+v] * QuantizationMatrix[u][v]);
+                    }
+                }
 
 				//! apply IDCT on this block
 				//TODO
-
+                
+                for (int x = 0; x < 8; x++)
+                {
+                    for (int y = 0; y < 8; y++)
+                    {
+                        double sum = 0;
+                        for (int v = 0; v < 8; v++)
+                        {
+                            double cv = 1;
+                            if(v == 0)
+                                cv = 1.0/sqrt(2.0);
+                            sum += cv * cos((double)((2*y+1)*v*PI)/16.0) * coeffArray[xpos+x][ypos+v];
+                        }
+                        Fr_[x][y] = 0.5 * sum;
+                    }
+                }
+                
+                for (int y = 0; y < 8; y++)
+                {
+                    for (int x = 0; x < 8; x++)
+                    {
+                        double sum = 0;
+                        for (int u = 0; u < 8; u++)
+                        {
+                            double cu = 1;
+                            if(u == 0)
+                                cu = 1.0/sqrt(2.0);
+                            sum += cu * cos((double)((2*x+1)*u*PI)/16.0) * Fr_[u][y];
+                        }
+                        f[xpos+x][ypos+y] = (int)0.5 * sum;
+                    }
+                }
 				//! shiftting back the pixel value range to 0~255
 				//TODO
+                for (int y = 0; y < 8; y++)
+                {
+                    for (int x = 0; x < 8; x++)
+                    {
+                        f[xpos+x][ypos+y] += 128;
+                        if(f[xpos+x][ypos+y]<0)
+                            f[xpos+x][ypos+y] = 0;
+                        if(f[xpos+x][ypos+y]>255)
+                            f[xpos+x][ypos+y]=255;
+                        reconstructedImg.setPixel(xpos+x, ypos+y, (unsigned char)f[xpos+x][ypos+y]);
+                    }
+                }
 				
 			}
 		}
+        
+        
+        
 		string savePath = "reconstructedImg.bmp";
 		reconstructedImg.save(savePath.c_str());
 		cout << "reconstructed image saved!" << endl;
 	}
-     */
+    
 	return 0;
 }
