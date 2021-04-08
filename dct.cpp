@@ -134,7 +134,7 @@ int main(int argc, char** argv)
                 {
                     for (int v = 0; v < 8; v++)
                     {
-                        coeffArray[xpos+u][ypos+v] = (double)coeffArray[xpos+u][ypos+v] * QuantizationMatrix[u][v]);
+                        coeffArray[xpos+u][ypos+v] = (double)coeffArray[xpos+u][ypos+v] * QuantizationMatrix[u][v];
                     }
                 }
 
@@ -169,7 +169,7 @@ int main(int argc, char** argv)
                                 cu = 1.0/sqrt(2.0);
                             sum += cu * cos((double)((2*x+1)*u*PI)/16.0) * Fr_[u][y];
                         }
-                        f[xpos+x][ypos+y] = (int)0.5 * sum;
+                        f[xpos+x][ypos+y] = round(0.5 * sum);
                     }
                 }
 				//! shiftting back the pixel value range to 0~255
@@ -183,13 +183,22 @@ int main(int argc, char** argv)
                             f[xpos+x][ypos+y] = 0;
                         if(f[xpos+x][ypos+y]>255)
                             f[xpos+x][ypos+y]=255;
-                        reconstructedImg.setPixel(xpos+x, ypos+y, (unsigned char)f[xpos+x][ypos+y]);
+                        
                     }
                 }
 				
 			}
 		}
         
+        for (int r = 0; r < rows; r++)
+        {
+            for (int c = 0; c < cols; c++)
+            {
+                reconstructedImg.setPixel(c, r, (unsigned char)f[c][r]);
+            }
+        }
+        
+
         
         
 		string savePath = "reconstructedImg.bmp";
