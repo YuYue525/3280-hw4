@@ -224,20 +224,18 @@ int main(int argc, char** argv)
             }
         }
         
-        int f_[256][256] = {0};
         for (int i = 0; i < rows; i++)
         {
             for (int j = 0; j < cols; j++)
             {
                 unsigned char tmp = 0;
                 s_img.getPixel(j, i, tmp);
-                f_[j][i] = (int)tmp - 128;
+                f[j][i] = (int)tmp - 128;
             }
         }
         
         //! 2D DCT for every 8x8 block (assume that the input image resolution is fixed to 256)
         // The quantized coefficients should be stored into 'coeffArray'
-        double coeffArray_[256][256]={0};
         
         for (int i = 0; i < blockRow; i++)
         {
@@ -276,7 +274,7 @@ int main(int argc, char** argv)
                         {
                             sum += cos((double)((2*y+1)*v*PI)/16.0) * Fr[u][y];
                         }
-                        coeffArray_[xpos+u][ypos+v] = 0.5 * cv * sum;
+                        coeffArray[xpos+u][ypos+v] = 0.5 * cv * sum;
                     }
                 }
 
@@ -284,7 +282,7 @@ int main(int argc, char** argv)
                 {
                     for (int v = 0; v < 8; v++)
                     {
-                        coeffArray_[xpos+u][ypos+v] = round((double)coeffArray_[xpos+u][ypos+v] / (double)QuantizationMatrix[u][v]);
+                        coeffArray[xpos+u][ypos+v] = round((double)coeffArray[xpos+u][ypos+v] / (double)QuantizationMatrix[u][v]);
                     }
                 }
                 
@@ -292,7 +290,7 @@ int main(int argc, char** argv)
                 {
                     for (int v = 0; v < 8; v++)
                     {
-                        coeffArray_[xpos+u][ypos+v] = coeffArray_[xpos+u][ypos+v] * mask[u][v];
+                        coeffArray[xpos+u][ypos+v] = coeffArray[xpos+u][ypos+v] * mask[u][v];
                     }
                 }
                 
@@ -304,7 +302,7 @@ int main(int argc, char** argv)
         {
             for (int c = 0; c < cols; c++)
             {
-                fprintf(fp, "%3.3lf ", coeffArray_[c][r]);
+                fprintf(fp, "%3.3lf ", coeffArray[c][r]);
             }
             fprintf(fp, "\n");
         }
