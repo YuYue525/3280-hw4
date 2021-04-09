@@ -198,13 +198,119 @@ int main(int argc, char** argv)
             }
         }
         
-
-        
-        
 		string savePath = "reconstructedImg.bmp";
 		reconstructedImg.save(savePath.c_str());
 		cout << "reconstructed image saved!" << endl;
 	}
+    
+    printf("Do you want to implement Image Denoise? [y/n]\n");
+    char input;
+    scanf("%c", &input);
+    getchar();
+    if(input == 'y')
+    {
+        printf("What level do you want to choose? [0-14]\n");
+        int level;
+        scanf("%d", &level);
+        getchar();
+        
+        int mask[8][8]={0};
+        for(int i = 0; i<8;i++)
+        {
+            for(int j =0;j<8;j++)
+            {
+                if((i+j)<=level)
+                    level[i][j] = 1;
+            }
+        }
+        
+        int f_[256][256] = {0};
+        for (int i = 0; i < rows; i++)
+        {
+            for (int j = 0; j < cols; j++)
+            {
+                unsigned char tmp = 0;
+                s_img.getPixel(j, i, tmp);
+                f_[j][i] = (int)tmp - 128;
+            }
+        }
+        
+        //! 2D DCT for every 8x8 block (assume that the input image resolution is fixed to 256)
+        // The quantized coefficients should be stored into 'coeffArray'
+        double coeffArray_[256][256]={0};
+        
+        for (int i = 0; i < blockRow; i++)
+        {
+            for (int j = 0; j < blockCol; j++)
+            {
+                int xpos = j*8, ypos = i*8;
+                //! apply DCT on block_ij (basic requirement)
+                //TODO
+                double Fr[8][8] = {0};
+                
+                for (int v = 0; v < 8; v++)
+                {
+                    for (int u = 0; u < 8; u++)
+                    {
+                        double cu = 1;
+                        double sum = 0;
+                        if(u == 0)
+                            cu = 1.0/sqrt(2.0);
+                        for (int x = 0; x < 8; x++)
+                        {
+                            sum += cos((double)((2*x+1)*u*PI)/16.0) * f[xpos+x][ypos+v];
+                        }
+
+                        Fr[u][v] = 0.5 * cu * sum;
+                    }
+                }
+                for (int u = 0; u < 8; u++)
+                {
+                    for (int v = 0; v < 8; v++)
+                    {
+                        double cv = 1;
+                        if(v == 0)
+                            cv = 1.0/sqrt(2.0);
+                        double sum = 0;
+                        for (int y = 0; y < 8; y++)
+                        {
+                            sum += cos((double)((2*y+1)*v*PI)/16.0) * Fr[u][y];
+                        }
+                        coeffArray_[xpos+u][ypos+v] = 0.5 * cv * sum;
+                    }
+                }
+
+                for (int u = 0; u < 8; u++)
+                {
+                    for (int v = 0; v < 8; v++)
+                    {
+                        coeffArray_[xpos+u][ypos+v] = round((double)coeffArray_[xpos+u][ypos+v] / (double)QuantizationMatrix[u][v]);
+                    }
+                }
+                
+                for (int u = 0; u < 8; u++)
+                {
+                    for (int v = 0; v < 8; v++)
+                    {
+                        coeffArray_[xpos+u][ypos+v] = coeffArray_[xpos+u][ypos+v] * mask[u][v];
+                    }
+                }
+                
+            }
+        }
+
+        FILE *fp = fopen("coeffs_denoise.txt", "w");
+        for (int r = 0; r < rows; r++)
+        {
+            for (int c = 0; c < cols; c++)
+            {
+                fprintf(fp, "%3.3lf ", coeffArray_[c][r]);
+            }
+            fprintf(fp, "\n");
+        }
+        cout << "Masked Quantized coefficients saved!" << endl;
+    }
+    
     
 	return 0;
 }
