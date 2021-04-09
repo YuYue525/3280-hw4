@@ -220,7 +220,7 @@ int main(int argc, char** argv)
             for(int j =0;j<8;j++)
             {
                 if((i+j)<=level)
-                    level[i][j] = 1;
+                    mask[i][j] = 1;
             }
         }
         
@@ -307,6 +307,95 @@ int main(int argc, char** argv)
             fprintf(fp, "\n");
         }
         cout << "Masked Quantized coefficients saved!" << endl;
+    }
+    
+    printf("Do you want to implement IDCT to reconstruct image with masked quantized coefficients? [y/n]\n");
+    scanf("%c", &input);
+    getchar();
+    
+    if (input == 'y')
+    {
+        Bitmap reconstructedImg(cols, rows);
+        //! apply IDCT on the quantized coefficients (enhancement part)
+        for (int i = 0; i < blockRow; i++)
+        {
+            for (int j = 0; j < blockCol; j++)
+            {
+                int xpos = j*8, ypos = i*8;
+                double Fr_[8][8] = {0};
+                //! apply de-quantization on block_ij
+                //TODO
+                for (int u = 0; u < 8; u++)
+                {
+                    for (int v = 0; v < 8; v++)
+                    {
+                        coeffArray[xpos+u][ypos+v] = (double)coeffArray[xpos+u][ypos+v] * QuantizationMatrix[u][v];
+                    }
+                }
+
+                //! apply IDCT on this block
+                //TODO
+                
+                for (int x = 0; x < 8; x++)
+                {
+                    for (int y = 0; y < 8; y++)
+                    {
+                        double sum = 0;
+                        for (int v = 0; v < 8; v++)
+                        {
+                            double cv = 1;
+                            if(v == 0)
+                                cv = 1.0/sqrt(2.0);
+                            sum += cv * cos((double)((2*y+1)*v*PI)/16.0) * coeffArray[xpos+x][ypos+v];
+                        }
+                        Fr_[x][y] = 0.5 * sum;
+                    }
+                }
+                
+                for (int y = 0; y < 8; y++)
+                {
+                    for (int x = 0; x < 8; x++)
+                    {
+                        double sum = 0;
+                        for (int u = 0; u < 8; u++)
+                        {
+                            double cu = 1;
+                            if(u == 0)
+                                cu = 1.0/sqrt(2.0);
+                            sum += cu * cos((double)((2*x+1)*u*PI)/16.0) * Fr_[u][y];
+                        }
+                        f[xpos+x][ypos+y] = round(0.5 * sum);
+                    }
+                }
+                //! shiftting back the pixel value range to 0~255
+                //TODO
+                for (int y = 0; y < 8; y++)
+                {
+                    for (int x = 0; x < 8; x++)
+                    {
+                        f[xpos+x][ypos+y] += 128;
+                        if(f[xpos+x][ypos+y]<0)
+                            f[xpos+x][ypos+y] = 0;
+                        if(f[xpos+x][ypos+y]>255)
+                            f[xpos+x][ypos+y]=255;
+                        
+                    }
+                }
+                
+            }
+        }
+        
+        for (int r = 0; r < rows; r++)
+        {
+            for (int c = 0; c < cols; c++)
+            {
+                reconstructedImg.setPixel(c, r, (unsigned char)f[c][r]);
+            }
+        }
+        
+        string savePath = "DenoiseImg.bmp";
+        reconstructedImg.save(savePath.c_str());
+        cout << "Denoised image saved!" << endl;
     }
     
     
