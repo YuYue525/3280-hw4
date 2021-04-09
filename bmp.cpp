@@ -2,9 +2,20 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <memory.h>
+#include <algorithm>
+#include<iostream>
+
+using namespace std;
 
 #define SafeFree(p)  { if(p) { free(p); p = NULL; } }
 
+struct RGBQUAD
+{
+	unsigned char R;
+	unsigned char G;
+	unsigned char B;
+	unsigned char QUAD;
+};
 
 Bitmap::Bitmap()
 {
@@ -52,7 +63,6 @@ bool Bitmap::create(int width, int height)
 
 }
 
-
 bool Bitmap::create(const char *path)
 {
 	BmpHeaderInfo bhi;
@@ -91,7 +101,6 @@ bool Bitmap::create(const char *path)
 		}
 		fclose(fp);
 	}
-
 	return true;
 }
 
@@ -99,12 +108,21 @@ bool Bitmap::create(const char *path)
 bool Bitmap::save(const char *path)
 {
 	BmpHeaderInfo bhi;
+	RGBQUAD	palette[256];
+
+	for (int i=0; i<256; i++)
+	{
+		palette[i].R = i;
+		palette[i].G = i;
+		palette[i].B = i;
+		palette[i].QUAD = 0;
+	}
 
 	bhi.bfType = 'MB';
-	bhi.bfSize = _width * _height * sizeof(unsigned char) + sizeof(bhi);
+	bhi.bfSize = _width * _height * sizeof(unsigned char) + sizeof(bhi) + sizeof(palette);
 	bhi.bfReserved1 = 0;
 	bhi.bfReserved2 = 0;
-	bhi.bfOffBits = sizeof(bhi);
+	bhi.bfOffBits = sizeof(bhi) + sizeof(palette);
 
 	bhi.biSize = 40;
 	bhi.biWidth = _width;
@@ -124,6 +142,7 @@ bool Bitmap::save(const char *path)
 	if (fp == NULL) return false;
 
 	fwrite(&bhi, sizeof(BmpHeaderInfo), 1, fp);
+	fwrite(palette, sizeof(RGBQUAD), 256, fp);
 	int index = 0;
 	for (int j = 0; j < _height; j++) {
 		

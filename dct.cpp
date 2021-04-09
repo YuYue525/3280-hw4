@@ -203,7 +203,7 @@ int main(int argc, char** argv)
 		cout << "reconstructed image saved!" << endl;
 	}
     
-    printf("Do you want to implement Image Denoise? [y/n]\n");
+    printf("Do you want to implement masked DCT? [y/n]\n");
     char input;
     scanf("%c", &input);
     getchar();
@@ -393,10 +393,11 @@ int main(int argc, char** argv)
             }
         }
         
-        string savePath = "DenoiseImg.bmp";
+        string savePath = "MaskedImg.bmp";
         reconstructedImg.save(savePath.c_str());
-        cout << "Denoised image saved!" << endl;
+        cout << "Masked image saved!" << endl;
     }
+    
     
     
 	return 0;
