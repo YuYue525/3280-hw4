@@ -203,7 +203,7 @@ int main(int argc, char** argv)
 		cout << "reconstructed image saved!" << endl;
 	}
     
-    printf("Do you want to implement masked DCT? [y/n]\n");
+    printf("Do you want to implement masked DCT to denoise? [y/n]\n");
     char input;
     scanf("%c", &input);
     getchar();
@@ -309,7 +309,7 @@ int main(int argc, char** argv)
         cout << "Masked Quantized coefficients saved!" << endl;
     }
     
-    printf("Do you want to implement IDCT to reconstruct image with masked quantized coefficients? [y/n]\n");
+    printf("Do you want to implement IDCT to reconstruct denoised image with masked quantized coefficients? [y/n]\n");
     scanf("%c", &input);
     getchar();
     
@@ -393,9 +393,9 @@ int main(int argc, char** argv)
             }
         }
         
-        string savePath = "MaskedImg.bmp";
+        string savePath = "DenoisedImg.bmp";
         reconstructedImg.save(savePath.c_str());
-        cout << "Masked image saved!" << endl;
+        cout << "Denoised image saved!" << endl;
     }
     
     
